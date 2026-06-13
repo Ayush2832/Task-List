@@ -1,0 +1,10 @@
+CREATE DATABASE tododb;
+
+\c tododb
+
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    title TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

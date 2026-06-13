@@ -6,23 +6,16 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/joho/godotenv"
 )
 
 type Task struct {
-	ID        int    `json:"id"`
-	Title     string `json:"title"`
-	CreatedAt string `json:"created_at"`
+	ID        int       `json:"id"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
 }
-
-var (
-	tasks  []Task
-	nextID = 1
-	mu     sync.Mutex
-)
 
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -30,102 +23,187 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		if origin == "" {
 			origin = "*"
 		}
+
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-User-ID")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
+
 		next(w, r)
 	}
 }
 
-func getTasksHandler(w http.ResponseWriter, r *http.Request) {
-	mu.Lock()
-	defer mu.Unlock()
-
+func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	if tasks == nil {
-		json.NewEncoder(w).Encode([]Task{})
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "ok",
+	})
+}
+
+func getTasksHandler(w http.ResponseWriter, r *http.Request) {
+
+	userID := r.Header.Get("X-User-ID")
+
+	if userID == "" {
+		http.Error(w, "missing user id", http.StatusBadRequest)
 		return
 	}
+
+	rows, err := db.Query(`
+		SELECT id, title, created_at
+		FROM tasks
+		WHERE user_id = $1
+		ORDER BY id DESC
+	`, userID)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	tasks := make([]Task, 0)
+
+	for rows.Next() {
+		var task Task
+
+		err := rows.Scan(
+			&task.ID,
+			&task.Title,
+			&task.CreatedAt,
+		)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tasks)
 }
 
 func createTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Title string `json:"title"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || input.Title == "" {
-		http.Error(w, `{"error":"invalid title"}`, http.StatusBadRequest)
+
+	userID := r.Header.Get("X-User-ID")
+
+	if userID == "" {
+		http.Error(w, "missing user id", http.StatusBadRequest)
 		return
 	}
 
-	mu.Lock()
-	task := Task{
-		ID:        nextID,
-		Title:     input.Title,
-		CreatedAt: time.Now().Format("2006-01-02 15:04"),
+	var input struct {
+		Title string `json:"title"`
 	}
-	tasks = append(tasks, task)
-	nextID++
-	mu.Unlock()
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if input.Title == "" {
+		http.Error(w, "title is required", http.StatusBadRequest)
+		return
+	}
+
+	var task Task
+
+	err := db.QueryRow(`
+		INSERT INTO tasks(user_id, title)
+		VALUES($1, $2)
+		RETURNING id, title, created_at
+	`,
+		userID,
+		input.Title,
+	).Scan(
+		&task.ID,
+		&task.Title,
+		&task.CreatedAt,
+	)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+
 	json.NewEncoder(w).Encode(task)
 }
 
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+
+	userID := r.Header.Get("X-User-ID")
+
+	if userID == "" {
+		http.Error(w, "missing user id", http.StatusBadRequest)
 		return
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
+	idStr := r.PathValue("id")
 
-	for i, t := range tasks {
-		if t.ID == id {
-			tasks = append(tasks[:i], tasks[i+1:]...)
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid task id", http.StatusBadRequest)
+		return
 	}
 
-	http.Error(w, `{"error":"task not found"}`, http.StatusNotFound)
-}
+	result, err := db.Exec(
+		"DELETE FROM tasks WHERE id = $1 AND user_id = $2",
+		id,
+		userID,
+	)
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		http.Error(w, "task not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func main() {
-	// Load .env FIRST — before any os.Getenv calls
+
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, reading from environment")
 	}
+
+	connectDB()
+	defer db.Close()
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on port %s", port)
-	log.Printf("ALLOWED_ORIGIN = %q", os.Getenv("ALLOWED_ORIGIN"))
-
 	mux := http.NewServeMux()
+
 	mux.HandleFunc("GET /health", corsMiddleware(healthHandler))
+
 	mux.HandleFunc("GET /api/tasks", corsMiddleware(getTasksHandler))
 	mux.HandleFunc("POST /api/tasks", corsMiddleware(createTaskHandler))
-	mux.HandleFunc("OPTIONS /api/tasks", corsMiddleware(healthHandler)) // preflight
 	mux.HandleFunc("DELETE /api/tasks/{id}", corsMiddleware(deleteTaskHandler))
-	mux.HandleFunc("OPTIONS /api/tasks/{id}", corsMiddleware(healthHandler)) // preflight
+
+	log.Printf("Server starting on port %s", port)
 
 	if err := http.ListenAndServe(":"+port, mux); err != nil {
 		log.Fatal(err)

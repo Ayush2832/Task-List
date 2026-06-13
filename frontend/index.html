@@ -246,6 +246,25 @@
 <script>
   // ── Config ──────────────────────────────────────────────────
   const API = (window.APP_CONFIG?.API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '');
+  function getUserId() {
+  let userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    if (window.crypto && crypto.randomUUID) {
+      userId = crypto.randomUUID();
+    } else {
+      userId =
+        Date.now().toString(36) +
+        Math.random().toString(36).substring(2);
+    }
+
+    localStorage.setItem("userId", userId);
+  }
+
+  return userId;
+}
+
+const USER_ID = getUserId();
 
   // ── Helpers ─────────────────────────────────────────────────
   function showToast(msg) {
@@ -290,62 +309,103 @@
 
   // ── API Calls ────────────────────────────────────────────────
   async function loadTasks() {
-    try {
-      const res = await fetch(`${API}/api/tasks`);
-      if (!res.ok) throw new Error();
-      const tasks = await res.json();
-      setStatus(true);
-      render(tasks);
-    } catch {
-      setStatus(false);
-      document.getElementById('task-list').innerHTML = `
-        <div class="empty">
-          <span class="icon">⚠</span>
-          <p>CANNOT REACH BACKEND</p>
-        </div>`;
-    }
-  }
+  try {
+    console.log("USER_ID =", USER_ID);
 
+    const res = await fetch(`${API}/api/tasks`, {
+      headers: {
+        "X-User-ID": USER_ID
+      }
+    });
+
+    console.log("Status:", res.status);
+
+    if (!res.ok) throw new Error();
+
+    let tasks = await res.json();
+
+    if (!Array.isArray(tasks)) {
+      tasks = [];
+    }
+
+    setStatus(true);
+    render(tasks);
+  } catch (err) {
+    console.error(err);
+    setStatus(false);
+  }
+}
   async function addTask() {
-    const input = document.getElementById('task-input');
-    const title = input.value.trim();
-    if (!title) { input.focus(); return; }
+  const input = document.getElementById('task-input');
+  const title = input.value.trim();
 
-    const btn = document.getElementById('add-btn');
-    btn.disabled = true;
-    btn.textContent = '...';
-
-    try {
-      const res = await fetch(`${API}/api/tasks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title }),
-      });
-      if (!res.ok) throw new Error();
-      input.value = '';
-      await loadTasks();
-    } catch {
-      showToast('Failed to add task');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '+ ADD';
-      input.focus();
-    }
+  if (!title) {
+    input.focus();
+    return;
   }
+
+  const btn = document.getElementById('add-btn');
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const res = await fetch(`${API}/api/tasks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-ID': USER_ID
+      },
+      body: JSON.stringify({
+        title
+      })
+    });
+
+    if (!res.ok) throw new Error();
+
+    input.value = '';
+
+    await loadTasks();
+
+  } catch {
+    showToast('Failed to add task');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '+ ADD';
+    input.focus();
+  }
+}
 
   async function deleteTask(id) {
-    const el = document.getElementById(`task-${id}`);
-    if (el) el.style.opacity = '0.4';
 
-    try {
-      const res = await fetch(`${API}/api/tasks/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error();
-      await loadTasks();
-    } catch {
-      showToast('Failed to delete task');
-      if (el) el.style.opacity = '1';
+  const el = document.getElementById(`task-${id}`);
+
+  if (el) {
+    el.style.opacity = '0.4';
+  }
+
+  try {
+
+    const res = await fetch(`${API}/api/tasks/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'X-User-ID': USER_ID
+      }
+    });
+
+    if (!res.ok) throw new Error();
+
+    await loadTasks();
+
+  } catch {
+
+    showToast('Failed to delete task');
+
+    if (el) {
+      el.style.opacity = '1';
     }
   }
+}
 
   // ── Keyboard shortcut ────────────────────────────────────────
   document.getElementById('task-input').addEventListener('keydown', e => {
