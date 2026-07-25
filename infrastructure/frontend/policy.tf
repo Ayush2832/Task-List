@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "frontend_policy" {
 
     actions = [
       "s3:GetObject"
-    ]
+    ]//
 
     resources = [
       "${aws_s3_bucket.frontend.arn}/*"
