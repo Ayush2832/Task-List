@@ -29,3 +29,43 @@ ENTRYPOINT [ "/taskbackend"]
     - Push the Frontend in the S3 and then serve it with CDN.
     - Then put the backend behind the load balancers. 
     - We can scale this with the ASG.
+
+# Strucuture
+```
+project/
+│
+├── frontend/
+│   ├── index.html
+│   ├── config.js
+│   └── ...
+│
+├── backend/
+│   ├── main.go
+│   ├── Dockerfile
+│   └── ...
+│
+├── infrastructure/
+│   │
+│   ├── frontend/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   ├── backend/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   ├── database/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   
+│
+└── .github/
+    └── workflows/
+        ├── frontend-deploy.yml
+        ├── backend.yml
+        └── infra-frontend.yml
+```

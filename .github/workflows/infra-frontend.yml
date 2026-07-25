@@ -1,13 +1,17 @@
-name: Terraform test
+name: Frontend AWS Infrastructure
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+        - main
+    paths:
+        - 'infrastructure/frontend/**'
 
 permissions:
     id-token: write
     contents: read
 jobs:
-    test-cred-job:
+    deploy:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -16,9 +20,29 @@ jobs:
             - name: AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                role-to-assume: ${{ secrets.AWS_ROLE_ARN }} # use oidc instead of access and secret key
                 aws-region: us-east-2
             
-            - name: check aws cred
-              run: |
-                aws sts get-caller-identity
+            - name: Cache Terraform
+              uses: actions/cache@v4
+              with:
+                path: infrastructure/frontend/.terraform
+                key: terraform-${{ hashFiles('infrastructure/frontend/.terraform.lock.hcl') }} #cache module
+
+            - uses: hashicorp/setup-terraform@v3
+              with:
+                terraform_version: 1.15.4
+            
+            - name: Terraform init
+              working-directory: infrastructure/frontend
+              run: terraform init
+            
+            - name: Terraform apply
+              working-directory: infrastructure/frontend
+              run: terraform apply
+            
+            - name: Download artiface i.e tfstate file
+              uses: actions/upload-artifact@v4
+              with:
+                name: terraform-state
+                path: infrastructure/frontend/terraform.tfstate
