@@ -9,3 +9,7 @@ variable "bucket_name" {
 variable "oac_name" {
   description = "OAC name"
 }
+
+variable "certificate_arn" {
+  type = string
+}
