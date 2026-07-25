@@ -39,7 +39,7 @@ jobs:
             
             - name: Terraform apply
               working-directory: infrastructure/frontend
-              run: terraform apply
+              run: terraform apply -auto-approve
             
             - name: Download artiface i.e tfstate file
               uses: actions/upload-artifact@v4
