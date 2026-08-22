@@ -23,6 +23,23 @@ EXPOSE 8080
 
 ENTRYPOINT [ "/taskbackend"]
 ```
+# Local
+```
+┌─────────────┐         ┌───────────────────────┐         ┌──────────────────┐
+│   Browser   │────────▶│  nginx (port 80)      │         │  Docker          │
+│             │         │                       │         │                  │
+│             │         │  site.local           │         │  ┌────────────┐  │
+│  index.html ◀─────────│    → serves frontend/ │         │  │  backend   │  │
+│  config.js  │         │                       │         │  │  :8080     │  │
+│             │         │  api.site.local       │────────▶│  │            │  │
+│  fetch() ───┼────────▶│    → proxy_pass :8080 │         │  └─────┬──────┘  │
+│             │         │                       │         │        │         │
+└─────────────┘         └───────────────────────┘         │  ┌─────▼──────┐  │
+                                                          │  │  postgres  │  │
+                                                          │  │  :5432     │  │
+                                                          │  └────────────┘  │
+                                                          └──────────────────┘
+
 
 # Cloud
 - Now we our code is ready. To run this my simple plan is

@@ -199,6 +199,9 @@ func main() {
 
 	mux.HandleFunc("GET /health", corsMiddleware(healthHandler))
 
+	mux.HandleFunc("OPTIONS /api/tasks", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {}))
+	mux.HandleFunc("OPTIONS /api/tasks/{id}", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {}))
+
 	mux.HandleFunc("GET /api/tasks", corsMiddleware(getTasksHandler))
 	mux.HandleFunc("POST /api/tasks", corsMiddleware(createTaskHandler))
 	mux.HandleFunc("DELETE /api/tasks/{id}", corsMiddleware(deleteTaskHandler))
