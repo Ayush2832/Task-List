@@ -3,3 +3,4 @@ backend/.env
 *.tfstate
 *.tfstate.*
 *.tfstate.backup
+*.tfvars

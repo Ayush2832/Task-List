@@ -24,4 +24,17 @@ func connectDB() {
 		log.Fatal(err)
 	}
 	log.Println("Database connected")
+
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS tasks (
+			id SERIAL PRIMARY KEY,
+			user_id VARCHAR(255) NOT NULL,
+			title TEXT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		log.Fatal("Error creating table:", err)
+	}
+	log.Println("Database migrated")
 }
