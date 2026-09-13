@@ -2,7 +2,7 @@ FROM golang:1.24 AS prod
 
 WORKDIR /apps
 
-COPY . .
+COPy . .
 
 RUN go mod download && CGO_ENABLED=0 GOOS=linux go build -o /taskbackend
 
