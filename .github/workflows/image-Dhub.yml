@@ -31,5 +31,6 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/task-list-backend:v${{ github.run_number }}
             ${{ vars.DOCKERHUB_USERNAME }}/task-list-backend:latest
-            ${{ vars.DOCKERHUB_USERNAME }}/task-list-backend:${{ github.sha }}
+            
