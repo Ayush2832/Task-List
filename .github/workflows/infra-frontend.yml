@@ -41,6 +41,7 @@ jobs:
             - name: Terraform apply
               working-directory: infrastructure/frontend
               env:
+                TF_VAR_bucket_name: ${{secrets.BUCKET_NAME}}
                 TF_VAR_certificate_arn: ${{ vars.CERTIFICATE_ARN }}
               run: terraform apply -auto-approve
             
