@@ -13,3 +13,11 @@ output "priv_sub"{
 output "ssl" {
     value = data.aws_acm_certificate.ssl.domain
 }
+
+output "frontend_url" {
+  value = var.frontend_url
+}
+
+output "database_url" {
+  value = var.db_url
+}

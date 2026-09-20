@@ -31,7 +31,7 @@ resource "aws_security_group" "ecs_sg" {
     vpc_id = data.aws_vpc.main_vpc.id
 }
 
-resource "aws_vpc_security_group_ingress_rule" "ec2_lb_allow" {
+resource "aws_vpc_security_group_ingress_rule" "ecs_lb_allow" {
     security_group_id = aws_security_group.ecs_sg.id
     ip_protocol = "tcp"
     referenced_security_group_id = aws_security_group.load_balancer_sg.id

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -62,6 +63,7 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 	`, userID)
 
 	if err != nil {
+		fmt.Println("Error in gettaskHandler", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -79,6 +81,7 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
+			fmt.Println("Error in scan", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -87,6 +90,7 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rows.Err(); err != nil {
+		fmt.Println("Error in rowErr", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
