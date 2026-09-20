@@ -9,3 +9,7 @@ output "cloudfront_domain" {
 output "distribution_id" {
   value = aws_cloudfront_distribution.frontend.id
 }//
+
+output "certificate_arn"{
+  value = var.certificate_arn.arn
+}

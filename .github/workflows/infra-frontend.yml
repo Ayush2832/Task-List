@@ -40,6 +40,8 @@ jobs:
             
             - name: Terraform apply
               working-directory: infrastructure/frontend
+              env:
+                TF_VAR_certificate_arn: ${{ vars.CERTIFICATE_ARN }}
               run: terraform apply -auto-approve
             
             - name: Download artiface i.e tfstate file
