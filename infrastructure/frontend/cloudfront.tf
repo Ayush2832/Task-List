@@ -8,7 +8,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   ]
 
   origin {
-    domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
+    domain_name              = data.aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id                = "s3-origin"
     origin_access_control_id = aws_cloudfront_origin_access_control.frontend.id
   }

@@ -1,5 +1,5 @@
 output "bucket_name" {
-  value = aws_s3_bucket.frontend.bucket
+  value = data.aws_s3_bucket.frontend.bucket
 }
 
 output "cloudfront_domain" {
@@ -11,5 +11,5 @@ output "distribution_id" {
 }//
 
 output "certificate_arn"{
-  value = var.certificate_arn.arn
+  value = var.certificate_arn
 }
