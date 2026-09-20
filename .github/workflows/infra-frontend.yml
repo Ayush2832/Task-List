@@ -50,6 +50,10 @@ jobs:
               with:
                 name: terraform-state
                 path: infrastructure/frontend/terraform.tfstate
+    deploy:
+        needs: frontend-infra-creation
+        uses: ./.github/workflows/frontend-deploy.yml
+        secrets: inherit
 
     rds-infra-creation:
         needs: frontend-infra-creation
