@@ -24,7 +24,7 @@ jobs:
                 role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
                 aws-region: us-east-2
 
-            - name:: Delete files
+            - name: Delete files
               run: |
                 aws s3 rm s3://${{ secrets.BUCKET_NAME }} --recursive
 
