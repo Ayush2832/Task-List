@@ -1,6 +1,7 @@
 name: DockerHub image push
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build-and-push:
