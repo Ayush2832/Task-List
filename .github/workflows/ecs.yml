@@ -37,4 +37,4 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                 name: terraform-state
-                path: infrastructure/rds/terraform.tfstate
+                path: infrastructure/backend/terraform.tfstate

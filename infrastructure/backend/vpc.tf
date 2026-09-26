@@ -18,3 +18,10 @@ data "aws_subnets" "priv_subnet"{
         values=["*priv*"]
     }
 }
+
+data "aws_route_table" "priv_Rt" {
+    filter {
+      name = "tag:Name"
+      values = ["priv-rt2"]
+    }
+}

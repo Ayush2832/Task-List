@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "tasklist" {
-    name = "task-list/secrets"
+    name = "task-list/secrets1"
 }
 
 

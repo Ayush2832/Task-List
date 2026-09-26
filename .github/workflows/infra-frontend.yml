@@ -50,12 +50,21 @@ jobs:
               with:
                 name: terraform-state
                 path: infrastructure/frontend/terraform.tfstate
+
     deploy:
+        name: Deploying fronetnd in s3
         needs: frontend-infra-creation
         uses: ./.github/workflows/frontend-deploy.yml
         secrets: inherit
 
     rds-infra-creation:
-        needs: frontend-infra-creation
+        name: RDS creation
+        needs: deploy
         uses: ./.github/workflows/infra-rds.yml
+        secrets: inherit
+
+    build-and-push:
+        name: Deploying image to Docker hub
+        needs: rds-infra-creation
+        uses: ./.github/workflows/image-Dhub.yml
         secrets: inherit

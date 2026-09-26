@@ -3,7 +3,7 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_task_definition" "ecs_taskDef" {
-  family                   = "strapi-task"
+  family                   = "tasklist_taskDef"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = "1024"
@@ -15,7 +15,7 @@ resource "aws_ecs_task_definition" "ecs_taskDef" {
     {
       name      = "app"
       # image     = "ayush2832/strapi3:v5"
-      image = "ayush2832/task-list-backend:v5"
+      image = "ayush2832/task-list-backend:latest"
       essential = true
       portMappings = [
         {
@@ -56,7 +56,7 @@ resource "aws_ecs_service" "strapi" {
   network_configuration {
     subnets         = data.aws_subnets.priv_subnet.ids
     security_groups = [aws_security_group.ecs_sg.id]
-    assign_public_ip = true
+    assign_public_ip = false
   }
 
   load_balancer {
