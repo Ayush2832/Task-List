@@ -408,7 +408,17 @@ const USER_ID = getUserId();
 
     if (!res.ok) throw new Error();
 
-    await loadTasks();
+    // Remove the row locally instead of refetching the whole list
+    if (el) el.remove();
+    const countEl = document.getElementById('task-count');
+    const current = parseInt(countEl.textContent, 10) || 0;
+    const next = Math.max(0, current - 1);
+    countEl.textContent = next;
+
+    // If that was the last task, show the empty state
+    if (next === 0) {
+      render([]);
+    }
 
   } catch {
 

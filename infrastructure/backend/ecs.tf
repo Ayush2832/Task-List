@@ -66,7 +66,7 @@ resource "aws_ecs_service" "strapi" {
   }
 
   deployment_controller {
-    type = "CODE_DEPLOY"
+    type = "ECS"
   }
 
   depends_on = [aws_lb_listener.https]
