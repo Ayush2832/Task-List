@@ -17,7 +17,3 @@ output "ssl" {
 output "frontend_url" {
   value = var.frontend_url
 }
-
-output "database_url" {
-  value = var.db_url
-}

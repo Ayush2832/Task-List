@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "ecs_taskDef" {
       secrets = [
         {
           name      = "DATABASE_URL"
-          valueFrom = "${aws_secretsmanager_secret.tasklist.arn}:DATABASE_URL::"
+          valueFrom = "${data.aws_secretsmanager_secret.tasklist.arn}:DATABASE_URL::"
         }
       ]
 
