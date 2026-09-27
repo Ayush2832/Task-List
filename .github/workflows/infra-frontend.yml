@@ -68,4 +68,3 @@ jobs:
         needs: build-and-push
         uses: ./.github/workflows/ecs.yml
         secrets: inherit
-        secrets: inherit
