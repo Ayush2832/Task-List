@@ -1,4 +1,5 @@
 backend/.env
+local/.env
 **/.terraform/*
 *.tfstate
 *.tfstate.*

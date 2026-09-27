@@ -1,12 +1,13 @@
 name: ECS
 on:
   workflow_dispatch:
+  workflow_call:
 permissions:
     id-token: write
     contents: read
 
 jobs:
-    deploy:
+    deploy-ecs:
         runs-on: self-hosted
         steps:
             - name: Checkout code
@@ -29,12 +30,12 @@ jobs:
             - name: Terraform apply
               working-directory: infrastructure/backend
               env:
-                TF_VAR_frontend_url: ${{secrets.FRONTED_URL}}
+                TF_VAR_frontend_url: ${{ vars.FRONTEND_URL }}
                 TF_VAR_db_url: ${{secrets.DB_URL}}
               run: terraform apply -auto-approve
             
             - name: Download artiface i.e tfstate file
               uses: actions/upload-artifact@v4
               with:
-                name: terraform-state
+                name: terraform-state-backend
                 path: infrastructure/backend/terraform.tfstate

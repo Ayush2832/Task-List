@@ -23,12 +23,6 @@ jobs:
               with:
                 role-to-assume: ${{ secrets.AWS_ROLE_ARN }} # use oidc instead of access and secret key
                 aws-region: us-east-2
-            
-            - name: Cache Terraform
-              uses: actions/cache@v4
-              with:
-                path: infrastructure/frontend/.terraform
-                key: terraform-${{ hashFiles('infrastructure/frontend/.terraform.lock.hcl') }} #cache module
 
             - uses: hashicorp/setup-terraform@v3
               with:
@@ -48,7 +42,7 @@ jobs:
             - name: Download artiface i.e tfstate file
               uses: actions/upload-artifact@v4
               with:
-                name: terraform-state
+                name: terraform-state-frontend
                 path: infrastructure/frontend/terraform.tfstate
 
     deploy:
@@ -67,4 +61,11 @@ jobs:
         name: Deploying image to Docker hub
         needs: rds-infra-creation
         uses: ./.github/workflows/image-Dhub.yml
+        secrets: inherit
+
+    deploy-ecs:
+        name: Creating ECS service
+        needs: build-and-push
+        uses: ./.github/workflows/ecs.yml
+        secrets: inherit
         secrets: inherit
